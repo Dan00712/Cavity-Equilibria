@@ -1,0 +1,3 @@
+#!/bin/sh
+
+julia -e 'using DrWatson; DrWatson.quickactivate("CavityEquilibria"); using Pluto; Pluto.run()'

@@ -1,8 +1,6 @@
 using DrWatson
-@quickactivate "Cavity-Equilibria"
-
-# Here you may include files from the source directory
-include(srcdir("dummy_src_file.jl"))
+@quickactivate "CavityEquilibria"
+using CavityEquilibria
 
 println(
 """
