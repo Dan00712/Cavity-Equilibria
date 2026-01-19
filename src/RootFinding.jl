@@ -55,17 +55,17 @@ function vL(vz, vd, vϕ; Δ, κ, params::SystemParams)
 end
 
 
-function find_roots(ivz, vd, vϕ; Δ, κ, params::SystemParams, method=Bisection)
+function find_roots(ivz, vd, vϕ; Δ, κ, params::SystemParams, method=Bisection, abstol=1e-7, reltol=0.0)
     vL_ = vz-> vL(vz/1e6, vd, vϕ; Δ=Δ, κ=κ, params=params)
-    roots_ = roots(vL_, ivz; contractor=method)
+    roots_ = roots(vL_, ivz; contractor=method, abstol=atol, reltol=reltol)
 
 
     roots_
 end
 
-function find_roots_log10(log10ivz, vd, vϕ; Δ, κ, params::SystemParams, method=Bisection)
+function find_roots_log10(log10ivz, vd, vϕ; Δ, κ, params::SystemParams, method=Bisection, abstol=1e-7, reltol=0.0)
     vL_ = vz-> vL(10 .^ (vz.+6), vd, vϕ; Δ=Δ, κ=κ, params=params)
-    roots_ = roots(vL_, log10ivz; contractor=method)
+    roots_ = roots(vL_, log10ivz; contractor=method, abstol=abstol, reltol=reltol)
     map!(roots_) do r
         Root(10 .^ (r.region), r.status)
     end
