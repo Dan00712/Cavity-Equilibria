@@ -66,6 +66,9 @@ end
 function find_roots_log10(log10ivz, vd, vϕ; Δ, κ, params::SystemParams, method=Bisection)
     vL_ = vz-> vL(10 .^ (vz.+6), vd, vϕ; Δ=Δ, κ=κ, params=params)
     roots_ = roots(vL_, log10ivz; contractor=method)
+    map!(roots_) do r
+        Root(10 .^ (r.region), r.status)
+    end
 
 
     roots_
