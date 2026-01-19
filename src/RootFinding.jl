@@ -5,7 +5,7 @@ using IntervalRootFinding
 using ..Parameters
 using ..Laser
 
-export vL, find_roots
+export vL, find_roots, find_roots_log10
 
 function δc(vz, vd; Δ, params::SystemParams)
     ħ = params.ħ
@@ -58,6 +58,14 @@ end
 function find_roots(ivz, vd, vϕ; Δ, κ, params::SystemParams, method=Bisection)
     vL_ = vz-> vL(vz/1e6, vd, vϕ; Δ=Δ, κ=κ, params=params)
     roots_ = roots(vL_, ivz; contractor=method)
+
+
+    roots_
+end
+
+function find_roots_log10(log10ivz, vd, vϕ; Δ, κ, params::SystemParams, method=Bisection)
+    vL_ = vz-> vL(10 .^ (vz.+6), vd, vϕ; Δ=Δ, κ=κ, params=params)
+    roots_ = roots(vL_, log10ivz; contractor=method)
 
 
     roots_
