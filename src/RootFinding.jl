@@ -20,7 +20,7 @@ function α_c_eq(vz, vd, vϕ; Δ, κ, params::SystemParams)
     α = params.α
 
     δc_ = δc(vz, vd; Δ=Δ, params=params)
-    α/ħ * sum(Ec(0, yi, zi; Δ=Δ, params=params)*Et(0,yi, zi; params=params)*exp(im*ϕi) for(yi, zi, ϕi) in zip(vd, vz, vϕ))/(δc_ - im*κ/2)
+    α/ħ * sum(Ec(0, yi, zi; Δ=Δ, params=params)*Et(0, 0, zi; params=params)*exp(im*ϕi) for(yi, zi, ϕi) in zip(vd, vz, vϕ))/(δc_ - im*κ/2)
 end
 
 function vL(vz, vd, vϕ; Δ, κ, params::SystemParams)
@@ -42,11 +42,11 @@ function vL(vz, vd, vϕ; Δ, κ, params::SystemParams)
     [begin
           t1 = (
                 cα_c * Ec(0, yi, zi; Δ=Δ, params=params) 
-                + conj(Et(0, yi, zi; params=params))*exp(-im*ϕi)
+                + conj(Et(0, 0, zi; params=params))*exp(-im*ϕi)
                )
           t2 = (
                 α_c * gz(yi, zi)*Ec(0,yi, zi; Δ=Δ, params=params)
-                + fz(zi)*Et(0,yi, zi; params=params) * exp(im * ϕi)
+                + fz(zi)*Et(0, 0, zi; params=params) * exp(im * ϕi)
           )
 
           real(t1) * real(t2) - imag(t1)*imag(t2)
