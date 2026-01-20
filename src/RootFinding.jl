@@ -55,8 +55,12 @@ function vL(vz, vd, vϕ; Δ, κ, params::SystemParams)
 end
 
 
-function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams)
+function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams, silent::Bool=true)
     model = Model(Ipopt.Optimizer)
+
+    if silent
+        set_silent(model)
+    end
 
     nvars = length(zguess)
     @variable(model, vz[1:nvars])
