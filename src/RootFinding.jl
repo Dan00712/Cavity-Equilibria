@@ -1,6 +1,7 @@
 module RootFinding
 
-using NLsolve
+using LinearAlgebra
+using JuMP, Ipopt
 
 using ..Parameters
 using ..Laser
@@ -55,15 +56,26 @@ end
 
 
 function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams)
-    @assert zguess isa AbstractVector
-    @assert length(zguess) == length(vd)
-    @assert length(zguess) == length(vϕ)
+    model = Model(Ipopt.Optimizer)
 
-    vL! = (F, zg)-> F .= vL(zg./1e6, vd, vϕ; Δ=Δ, κ=κ, params=params)
-    root = nlsolve(vL!, zguess; method=:trust_region,
-              ftol=1e-12, xtol=1e-12)
+    nvars = length(zguess)
+    @variable(model, vz[1:nvars])
+    set_start_value.(vz, zguess)
 
-    root
+    function objective(vz...)
+        vz_ = collect(vz)
+        F = vL(vz_, vd, vϕ; Δ=Δ, κ=κ, params=params)
+        norm(F)
+    end
+    register(model, :obj_func, nvars, objective, autodiff=true)
+    @NLobjective(model, Min, obj_func(vz...))
+
+    optimize!(model)
+
+    solution = value.(vz)
+    residual_norm = sqrt(objective_value(model))
+
+    solution
 end
 
 end # module RootFinding
