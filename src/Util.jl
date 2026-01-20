@@ -2,7 +2,6 @@ module Util
 
 using Dates
 
-using IntervalArithmetic
 
 using ..Parameters
 
@@ -36,15 +35,6 @@ function prepare_freq(Δ, d; params::SystemParams)
 	end
 	kc = findclosest(d/2, kc, π)
 	kc *params.c
-end
-
-function roottomidpoint(root)
-    I = root.interval
-
-    vz = mid.(I)
-    err = radius.(I)
-
-    vz, err
 end
 
 end # module Util

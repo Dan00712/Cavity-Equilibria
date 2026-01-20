@@ -1,6 +1,6 @@
 module RootFinding
 
-using IntervalRootFinding
+using NLsolve
 
 using ..Parameters
 using ..Laser
@@ -48,30 +48,22 @@ function vL(vz, vd, vϕ; Δ, κ, params::SystemParams)
                 α_c * gz(yi, zi)*Ec(0,yi, zi; Δ=Δ, params=params)
                 + fz(zi)*Et(0, 0, zi; params=params) * exp(im * ϕi)
           )
-
-          real(t1) * real(t2) - imag(t1)*imag(t2)
+          real(t1*t2)
      end
     for (yi, zi, ϕi) in zip(vd, vz, vϕ)]
 end
 
 
-function find_roots(ivz, vd, vϕ; Δ, κ, params::SystemParams, method=Bisection)
-    vL_ = vz-> vL(vz/1e6, vd, vϕ; Δ=Δ, κ=κ, params=params)
-    roots_ = roots(vL_, ivz; contractor=method)
+function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams)
+    @assert zguess isa AbstractVector
+    @assert length(zguess) == length(vd)
+    @assert length(zguess) == length(vϕ)
 
+    vL! = (F, zg)-> F .= vL(zg./1e6, vd, vϕ; Δ=Δ, κ=κ, params=params)
+    root = nlsolve(vL!, zguess; method=:trust_region,
+              ftol=1e-12, xtol=1e-12)
 
-    roots_
-end
-
-function find_roots_log10(log10ivz, vd, vϕ; Δ, κ, params::SystemParams, method=Bisection)
-    vL_ = vz-> vL(10 .^ (vz.+6), vd, vϕ; Δ=Δ, κ=κ, params=params)
-    roots_ = roots(vL_, log10ivz; contractor=method)
-    map!(roots_) do r
-        Root(10 .^ (r.region), r.status)
-    end
-
-
-    roots_
+    root
 end
 
 end # module RootFinding
