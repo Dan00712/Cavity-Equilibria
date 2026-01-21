@@ -1,6 +1,7 @@
 module RootFinding
 
-using NLsolve
+using Optim
+using LinearAlgebra
 
 using ..Parameters
 using ..Laser
@@ -54,16 +55,12 @@ function vL(vz, vd, vϕ; Δ, κ, params::SystemParams)
 end
 
 
-function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams)
-    @assert zguess isa AbstractVector
-    @assert length(zguess) == length(vd)
-    @assert length(zguess) == length(vϕ)
+function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams, method=NelderMead())
 
-    vL! = (F, zg)-> F .= vL(zg./1e6, vd, vϕ; Δ=Δ, κ=κ, params=params)
-    root = nlsolve(vL!, zguess; method=:trust_region,
-              ftol=1e-12, xtol=1e-12)
+    vL_ = zg-> norm(vL(zg ./ 1e6, vd, vϕ; Δ=Δ, κ=κ, params=params))
+    root = optimize(vL_, collect(zguess), method)
 
-    root.zero
+    minimum(root)
 end
 
 end # module RootFinding
