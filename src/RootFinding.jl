@@ -63,11 +63,11 @@ function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams, silent::Bool=
     end
 
     nvars = length(zguess)
-    @variable(model, vz[1:nvars])
-    set_start_value.(vz, zguess)
+    @variable(model, log10(1e-2) <= vz[1:nvars] <= log10(5e1))
+    set_start_value.(vz, log10.(zguess))
 
     function objective(vz...)
-        vz_ = collect(vz)
+        vz_ = exp10.(collect(vz))
         F = vL(vz_, vd, vϕ; Δ=Δ, κ=κ, params=params)
         norm(F)
     end
@@ -79,7 +79,7 @@ function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams, silent::Bool=
     solution = value.(vz)
     residual_norm = sqrt(objective_value(model))
 
-    solution
+    exp10.(solution)
 end
 
 end # module RootFinding
