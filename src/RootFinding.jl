@@ -63,7 +63,7 @@ function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams)
     root = nlsolve(vL!, zguess; method=:trust_region,
               ftol=1e-12, xtol=1e-12)
 
-    root
+    root.zero
 end
 
 end # module RootFinding
