@@ -1,0 +1,7 @@
+[old-n1-data]
+git-tree-sha1="94dea54f15b49aff600719b1055a3e23b7f677a6"
+lazy=true
+
+[[old-n1-data.download]]
+url="https://github.com/Dan00712/Bac-Code-SingleCavity/releases/download/v0.9.2/data.tar.gz"
+sha256="2ca9d1a3e20c7375a60ec6841d78b3991f1ff0efbbe637bafce9bab318db4935"
