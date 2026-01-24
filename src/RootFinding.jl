@@ -59,11 +59,19 @@ function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams)
     @assert length(zguess) == length(vd)
     @assert length(zguess) == length(vϕ)
 
-    vL! = (F, zg)-> F .= vL(zg./1e6, vd, vϕ; Δ=Δ, κ=κ, params=params)
-    root = nlsolve(vL!, zguess; method=:trust_region,
-              ftol=1e-12, xtol=1e-12)
+    vL! = (F, zg)-> F .= vL(zg ./1e6, vd, vϕ; Δ=Δ, κ=κ, params=params)
+    root = nlsolve(vL!, 
+                   zguess
+                   ;method=:trust_region,
+                    ftol=1e-12,
+                    xtol=1e-12
+           )
 
-    root.zero
+    if converged(root)
+        root.zero
+    else
+        nothing
+    end
 end
 
 end # module RootFinding
