@@ -74,6 +74,7 @@ Find roots of the optical force equation using nonlinear solving.
 - `Δ`: Detuning angular frequency 
 - `κ`: damping parameter
 - `params::SystemParams`: parameters of the system
+- `scale`: scaling factor for root finding (zguess gets scaled by scale and the root finding function by 1/scale)
 
 # Returns
 - `Vector{Float64}`: Root positions in meters
@@ -89,14 +90,14 @@ vϕ = [0.0, π/4, π/2]
 roots = find_roots(zguess, vd, vϕ; Δ=1e6, κ=0.5, params=DEFAULT_PARAMETER)
 ```
 """
-function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams)
+function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams, scale=1e6)
     @assert zguess isa AbstractVector
     @assert length(zguess) == length(vd)
     @assert length(zguess) == length(vϕ)
 
-    vL! = (F, zg)-> F .= vL(zg ./1e6, vd, vϕ; Δ=Δ, κ=κ, params=params)
+    vL! = (F, zg)-> F .= vL(zg ./scale, vd, vϕ; Δ=Δ, κ=κ, params=params)
     root = nlsolve(vL!,
-                   zguess .* 1e6
+                   zguess .* scale
                    ;method=:trust_region,
                     ftol=1e-12,
                     xtol=1e-12
@@ -105,7 +106,7 @@ function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams)
     if !converged(root)
         throw(ConvergenceError(":trust_region failed to converge on a root", root))
     end
-    root.zero ./ 1e6
+    root.zero ./ scale
 end
 
 
