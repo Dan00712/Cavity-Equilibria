@@ -5,7 +5,7 @@ using NLsolve
 using ..Parameters
 using ..Laser
 
-export vL, find_roots, find_roots_log10
+export vL, find_roots, find_roots_log10, ConvergenceError
 
 function δc(vz, vd; Δ, params::SystemParams)
     ħ = params.ħ
@@ -54,24 +54,59 @@ function vL(vz, vd, vϕ; Δ, κ, params::SystemParams)
 end
 
 
+@kwdef struct ConvergenceError <: Exception
+    msg::String
+    result::NLsolve.SolverResults
+end
+
+Base.showerror(io::IO, e::ConvergenceError) = print(io, "ConvergenceError: ", e.msg)
+
+
+"""
+    find_roots(zguess, vd, vϕ; Δ, κ, params)
+
+Find roots of the optical force equation using nonlinear solving.
+
+# Arguments
+- `zguess::AbstractVector`: Initial guess for z positions (in meters; with default params)
+- `vd::AbstractVector`: spacing of the tweezers
+- `vϕ::AbstractVector`: phase of the tweezers in reference to a global phase
+- `Δ`: Detuning angular frequency 
+- `κ`: damping parameter
+- `params::SystemParams`: parameters of the system
+
+# Returns
+- `Vector{Float64}`: Root positions in meters
+
+# Throws
+- `ConvergenceError`: If the nonlinear solver fails to converge
+
+# Examples
+```julia
+zguess = [1e-6, 2e-6, 3e-6]
+vd = [0.0, 0.1, 0.2]
+vϕ = [0.0, π/4, π/2]
+roots = find_roots(zguess, vd, vϕ; Δ=1e6, κ=0.5, params=DEFAULT_PARAMETER)
+```
+"""
 function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams)
     @assert zguess isa AbstractVector
     @assert length(zguess) == length(vd)
     @assert length(zguess) == length(vϕ)
 
     vL! = (F, zg)-> F .= vL(zg ./1e6, vd, vϕ; Δ=Δ, κ=κ, params=params)
-    root = nlsolve(vL!, 
-                   zguess
+    root = nlsolve(vL!,
+                   zguess .* 1e6
                    ;method=:trust_region,
                     ftol=1e-12,
                     xtol=1e-12
            )
 
-    if converged(root)
-        root.zero
-    else
-        nothing
+    if !converged(root)
+        throw(ConvergenceError(":trust_region failed to converge on a root", root))
     end
+    root.zero ./ 1e6
 end
+
 
 end # module RootFinding
