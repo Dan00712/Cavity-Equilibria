@@ -1,3 +1,4 @@
+#!/usr/bin/env julia
 using DrWatson
 DrWatson.quickactivate(
 	"CavityEquilibria")

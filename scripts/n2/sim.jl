@@ -9,6 +9,9 @@ using Random
 
 using JLD2
 using Plots
+if isinteractive()
+    plotlyjs()
+end
 using ProgressBars
 
 using CavityEquilibria
@@ -20,9 +23,9 @@ using CavityEquilibria.Util
 const params = DEFAULT_PARAMS
 const Ω = range(1, 400, length = 100) .* 1e3*2π ;
 
-const N = 1
+const N = 2
 const sz = let
-	VALS = 25
+	VALS = 15
 	Random.seed!(0)
 
 	#range is [-2, 2]
@@ -30,22 +33,25 @@ const sz = let
 	1e-6 .* exp10.(logsz)
 end
 const vz = Iterators.product([sz for _ in 1:N]...)
-const d = 0
+const d = params.R * 100
 const κ = 18e4 * 2π
-const vd = [0]
-const vϕ = [0]
+const vd = [-d/2, d/2]
+const vϕ = [0, 0]
 
 ω, z = let
 	ω = []
 	z = []
-    for Δ in ProgressBar(Ω)
+    l = ReentrantLock()
+    Threads.@threads for Δ in ProgressBar(Ω)
 		for zg in vz
 			try
 				r = find_roots(collect(zg), vd, vϕ; Δ=Δ, κ=κ, params=params)
 
 				if (length(z) == 0 || !any(v -> isapprox(v, r), z)) && all(abs.(r) .< 1e3)
-					push!(z, r)
-					push!(ω, Δ)
+                    lock(l) do 
+					    push!(z, r)
+    					push!(ω, Δ)
+                    end
 				end
 			catch err
 				if !(err isa ConvergenceError)
@@ -60,9 +66,10 @@ const vϕ = [0]
 	ω, z
 end
 
+const PREFIX="n2"
 let
 	p = joinpath(
-		datadir("P1") |> mkpath,
+		datadir(PREFIX) |> mkpath,
 		"latest.jld2"
 	)
 	M = (ω=ω, z=z)
@@ -70,23 +77,29 @@ let
 end
 
 p = plot(;
-	 xlabel="Δ/ 2π kHz",
-	 ylabel="z/μm",
-	 yscale=:log,
-
+	 zlabel="Δ/ 2π kHz",
+	 xlabel="z1/μm",
+	 ylabel="z2/μm",
+	 #yscale=:log,
+	 #xscale=:log,
 )
 
 scatter!(p,
+		 z[1, :], # x
+         z[2, :], #y
 		 ω,
-		 z[1, :]
 )
 savefig(
 	p,
-	joinpath(mkpath(plotsdir("n1")), "latest.pdf")
+    joinpath(mkpath(plotsdir(PREFIX)), "latest.html")
 )
 savefig(
 	p,
-	joinpath(mkpath(plotsdir("n1")), "$(now_nodots()).png")
+    joinpath(mkpath(plotsdir(PREFIX)), "latest.pdf")
+)
+savefig(
+	p,
+	joinpath(mkpath(plotsdir(PREFIX)), "$(now_nodots()).png")
 )
 
 if isinteractive()
