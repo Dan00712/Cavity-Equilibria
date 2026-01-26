@@ -33,11 +33,10 @@ const sz = let
     1e-6 .* vcat(exp10.(logsz), -1 .* exp10.(logsz))
 end
 const vz = Iterators.product([sz for _ in 1:N]...)
-const d = params.R * 100
+const d = params.R * 10
 const κ = 18e4 * 2π
 const vd = [-d/2, d/2]
-const d = Dict()
-l = ReentrantLock()
+const D = Dict()
 
 function foo(vϕ, p, style)
 	ω = []
@@ -47,7 +46,7 @@ function foo(vϕ, p, style)
 			try
 				r = find_roots(collect(zg), vd, vϕ; Δ=Δ, κ=κ, params=params)
 
-				if (length(z) == 0 || !any(v -> isapprox(v, r), z)) && all(abs.(r) .< 1e3)
+				if (length(z) == 0 || !any(v -> isapprox(v, r), z)) && all(abs.(r) .< 1)
 					push!(z, r)
 					push!(ω, Δ)
 				end
@@ -61,15 +60,13 @@ function foo(vϕ, p, style)
 
 	z = Iterators.reduce(hcat, z)
 
-    lock(l) do
-        d[vϕ[2]] = (Δ=ω, z=z)
-        scatter!(p,
-		    z[1, :], # x
-            z[2, :], #y
-		    ω;
-            style...
-        )
-    end
+    D[vϕ[2]] = (Δ=ω, z=z)
+    scatter!(p,
+	    z[1, :] .* 1e6, # x
+        z[2, :] .* 1e6, # y
+	    ω;
+        style...
+    )
 
 	ω, z
 end
@@ -80,7 +77,7 @@ let
 		datadir(PREFIX) |> mkpath,
 		"latest.jld2"
 	)
-	@save p d
+	@save p D
 end
 
 p = plot(;
@@ -94,10 +91,11 @@ for (vϕ, style) in zip(
                         [0, π/2],
                         [0, π],
                         [0, -π/2]],
-                       [Dict(:color=>:blue, :label=>"ϕ=0"),
-                        Dict(:color=>:red, :label=>"ϕ=π/2"),
-                        Dict(:color=>:orange, :label=>"ϕ=π"),
-                        Dict(:color=>:green, :label=>"ϕ=-π/2")]
+                       [Dict(:color=>:blue, :label=>"ϕ=0", :markersize=>5),
+                        Dict(:color=>:red, :label=>"ϕ=π/2", :markersize=>5),
+                        Dict(:color=>:orange, :label=>"ϕ=π", :markersize=>5),
+                        Dict(:color=>:green, :label=>"ϕ=-π/2", :markersize=>5)
+                       ]
                       )
     foo(vϕ, p, style)
 end

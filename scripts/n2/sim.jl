@@ -30,10 +30,10 @@ const sz = let
 
 	#range is [-2, 2]
 	logsz = rand(VALS) .* 4 .- 2
-	1e-6 .* exp10.(logsz)
+    1e-6 .* vcat(exp10.(logsz), -1 .* exp10.(logsz))
 end
 const vz = Iterators.product([sz for _ in 1:N]...)
-const d = params.R * 100
+const d = params.R * 10
 const κ = 18e4 * 2π
 const vd = [-d/2, d/2]
 const vϕ = [0, 0]
@@ -47,7 +47,7 @@ const vϕ = [0, 0]
 			try
 				r = find_roots(collect(zg), vd, vϕ; Δ=Δ, κ=κ, params=params)
 
-				if (length(z) == 0 || !any(v -> isapprox(v, r), z)) && all(abs.(r) .< 1e3)
+				if (length(z) == 0 || !any(v -> isapprox(v, r), z)) && all(abs.(r) .< 1)
                     lock(l) do 
 					    push!(z, r)
     					push!(ω, Δ)
@@ -85,9 +85,10 @@ p = plot(;
 )
 
 scatter!(p,
-		 z[1, :], # x
-         z[2, :], #y
-		 ω,
+		 z[1, :] .* 1e6, # x
+         z[2, :] .* 1e6, # y
+		 ω;
+         markersize=5
 )
 savefig(
 	p,
