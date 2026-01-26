@@ -12,29 +12,29 @@ function now_nodots()
 end
 
 function findclosest(a, binit, c)
-"""
-	We have that a * b = n * c
-	binit does not satisfy this,
-	but we want the closest be to it
-"""
-	if a == 0
-		return binit
-	end
-	n = round(a*binit/c)
-	b = n*c/a
-	b
+    """
+    	We have that a * b = n * c
+    	binit does not satisfy this,
+    	but we want the closest be to it
+    """
+    if a == 0
+        return binit
+    end
+    n = round(a*binit/c)
+    b = n*c/a
+    b
 end
 
 function prepare_freq(Δ, d; params::SystemParams)
-	if d == 0
-		return Δ
-	end
-	ωc = Δ + params.ω0
-	kc = let
-		ωc/params.c
-	end
-	kc = findclosest(d/2, kc, π)
-	kc *params.c
+    if d == 0
+        return Δ
+    end
+    ωc = Δ + params.ω0
+    kc = let
+        ωc/params.c
+    end
+    kc = findclosest(d/2, kc, π)
+    kc * params.c
 end
 
 end # module Util

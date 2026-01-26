@@ -4,7 +4,7 @@ using ..Parameters
 
 export Ec, Et
 
-function E0c(;Δ, params::SystemParams)
+function E0c(; Δ, params::SystemParams)
     ħ = params.ħ
     ϵ0 = params.ϵ0
 
@@ -30,7 +30,7 @@ function Ec(x, y, z; Δ, params::SystemParams)
         ωc = Δ + ω0
         ωc/c
     end
-    E0c(;Δ=Δ, params=params) * exp(-(x^2+z^2)/Wc^2) * ζ * cos(kc*y)
+    E0c(; Δ = Δ, params = params) * exp(-(x^2+z^2)/Wc^2) * ζ * cos(kc*y)
 end
 
 function ϕt(x, y, z; params::SystemParams)
@@ -55,10 +55,10 @@ function Et(x, y, z; params)
     Wt = params.Wt
     Ax, Ay = params.Ax, params.Ay
 
-    (E0/2 
-       * expi(k0*z+ϕt(x, y, z; params=params)) 
-       * Wt/W(z; params=params) 
-       * exp(-(y/Ay/W(z; params=params))^2) * exp(-(x/Ax/W(z; params=params))^2)
+    (
+        E0/2 * expi(k0*z+ϕt(x, y, z; params = params)) * Wt/W(z; params = params) *
+        exp(-(y/Ay/W(z; params = params))^2) *
+        exp(-(x/Ax/W(z; params = params))^2)
     )
 end
 

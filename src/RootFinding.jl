@@ -11,7 +11,7 @@ function δc(vz, vd; Δ, params::SystemParams)
     ħ = params.ħ
     α = params.α
 
-    Δ -α/ħ * sum(Ec(0, yi, zi; Δ=Δ, params=params)^2 for(yi, zi) in zip(vd, vz))
+    Δ - α/ħ * sum(Ec(0, yi, zi; Δ = Δ, params = params)^2 for (yi, zi) in zip(vd, vz))
 end
 
 function α_c_eq(vz, vd, vϕ; Δ, κ, params::SystemParams)
@@ -19,8 +19,11 @@ function α_c_eq(vz, vd, vϕ; Δ, κ, params::SystemParams)
 
     α = params.α
 
-    δc_ = δc(vz, vd; Δ=Δ, params=params)
-    α/ħ * sum(Ec(0, yi, zi; Δ=Δ, params=params)*Et(0, 0, zi; params=params)*exp(im*ϕi) for(yi, zi, ϕi) in zip(vd, vz, vϕ))/(δc_ - im*κ/2)
+    δc_ = δc(vz, vd; Δ = Δ, params = params)
+    α/ħ * sum(
+        Ec(0, yi, zi; Δ = Δ, params = params)*Et(0, 0, zi; params = params)*exp(im*ϕi) for
+        (yi, zi, ϕi) in zip(vd, vz, vϕ)
+    )/(δc_ - im*κ/2)
 end
 
 function vL(vz, vd, vϕ; Δ, κ, params::SystemParams)
@@ -35,22 +38,23 @@ function vL(vz, vd, vϕ; Δ, κ, params::SystemParams)
     zR = params.zR
 
     fz(z) = (im*(k0 - zR/(z^2 + zR^2)) - z/(z^2 + zR^2))
-    gz(y, z) = -2*z/Wc^2 
-    α_c = α_c_eq(vz, vd, vϕ; Δ=Δ, κ=κ, params=params)
+    gz(y, z) = -2*z/Wc^2
+    α_c = α_c_eq(vz, vd, vϕ; Δ = Δ, κ = κ, params = params)
     cα_c = conj(α_c)
 
-    [begin
-          t1 = (
-                cα_c * Ec(0, yi, zi; Δ=Δ, params=params) 
-                + conj(Et(0, 0, zi; params=params))*exp(-im*ϕi)
-               )
-          t2 = (
-                α_c * gz(yi, zi)*Ec(0,yi, zi; Δ=Δ, params=params)
-                + fz(zi)*Et(0, 0, zi; params=params) * exp(im * ϕi)
-          )
-          real(t1*t2)
-     end
-    for (yi, zi, ϕi) in zip(vd, vz, vϕ)]
+    [
+        begin
+            t1 = (
+                cα_c * Ec(0, yi, zi; Δ = Δ, params = params) +
+                conj(Et(0, 0, zi; params = params))*exp(-im*ϕi)
+            )
+            t2 = (
+                α_c * gz(yi, zi) * Ec(0, yi, zi; Δ = Δ, params = params) +
+                fz(zi) * Et(0, 0, zi; params = params) * exp(im * ϕi)
+            )
+            real(t1*t2)
+        end for (yi, zi, ϕi) in zip(vd, vz, vϕ)
+    ]
 end
 
 
@@ -90,18 +94,13 @@ vϕ = [0.0, π/4, π/2]
 roots = find_roots(zguess, vd, vϕ; Δ=1e6, κ=0.5, params=DEFAULT_PARAMETER)
 ```
 """
-function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams, scale=1e6)
+function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams, scale = 1e6)
     @assert zguess isa AbstractVector
     @assert length(zguess) == length(vd)
     @assert length(zguess) == length(vϕ)
 
-    vL! = (F, zg)-> F .= vL(zg ./scale, vd, vϕ; Δ=Δ, κ=κ, params=params)
-    root = nlsolve(vL!,
-                   zguess .* scale
-                   ;method=:trust_region,
-                    ftol=1e-16,
-                    xtol=1e-16
-           )
+    vL! = (F, zg)->F .= vL(zg ./ scale, vd, vϕ; Δ = Δ, κ = κ, params = params)
+    root = nlsolve(vL!, zguess .* scale; method = :trust_region, ftol = 1e-16, xtol = 1e-16)
 
     if !converged(root)
         throw(ConvergenceError(":trust_region failed to converge on a root", root))
