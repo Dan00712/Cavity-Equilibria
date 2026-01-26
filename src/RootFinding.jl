@@ -99,8 +99,8 @@ function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams, scale=1e6)
     root = nlsolve(vL!,
                    zguess .* scale
                    ;method=:trust_region,
-                    ftol=1e-12,
-                    xtol=1e-12
+                    ftol=1e-16,
+                    xtol=1e-16
            )
 
     if !converged(root)
