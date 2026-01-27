@@ -22,7 +22,8 @@ using CavityEquilibria.RootFinding
 using CavityEquilibria.Util
 
 const params = DEFAULT_PARAMS
-const Ω = range(1, 400, length = 100) .* 1e3*2π;
+
+const Φ = [0]
 
 const N = 2
 const sz = let
@@ -34,25 +35,30 @@ const sz = let
     1e-6 .* vcat(exp10.(logsz), -1 .* exp10.(logsz))
 end
 const vz = Iterators.product([sz for _ = 1:N]...)
-const d = params.R * 10
+const d = 1.5e-6    # m === 1.5 μm
 const κ = 18e4 * 2π
+const Δ = let
+    # kc * d/2 = 2 π
+    kc = 4π/d
+    # c = ωc/kc
+    ωc = params.c * kc
+    
+    ωc - params.ω0
+end
 const vd = [-d/2, d/2]
-const vϕ = [0, 0]
 
-ω, z = let
-    ω = []
+
+ϕ, z = let
+    ϕ = []
     z = []
-    l = ReentrantLock()
-    Threads.@threads for Δ in ProgressBar(Ω)
+    for ϕ_ in ProgressBar(Φ)
         for zg in vz
             try
-                r = find_roots(collect(zg), vd, vϕ; Δ = Δ, κ = κ, params = params)
+                r = find_roots(collect(zg), vd, [0, ϕ_]; Δ = Δ, κ = κ, params = params)
 
                 if (length(z) == 0 || !any(v -> isapprox(v, r), z)) && all(abs.(r) .< 1)
-                    lock(l) do
-                        push!(z, r)
-                        push!(ω, Δ)
-                    end
+                    push!(z, r)
+                    push!(ϕ, ϕ_)
                 end
             catch err
                 if !(err isa ConvergenceError)
@@ -64,18 +70,18 @@ const vϕ = [0, 0]
 
     z = Iterators.reduce(hcat, z)
 
-    ω, z
+    ϕ, z
 end
 
-const PREFIX="n2"
+const PREFIX="n2-single"
 let
     p = joinpath(datadir(PREFIX) |> mkpath, "latest.jld2")
-    M = (ω = ω, z = z)
+    M = (ϕ=ϕ, z = z)
     @save p M
 end
 
 p = plot(;
-    zlabel = "Δ/ 2π kHz",
+#    zlabel = "Δ/ 2π kHz",
     xlabel = "z1/μm",
     ylabel = "z2/μm",
     #yscale=:log,
@@ -86,8 +92,8 @@ scatter!(
     p,
     z[1, :] .* 1e6, # x
     z[2, :] .* 1e6, # y
-    ω;
-    markersize = 5,
+#    ϕ;
+#    markersize = 5,
 )
 savefig(p, joinpath(mkpath(plotsdir(PREFIX)), "latest.html"))
 savefig(p, joinpath(mkpath(plotsdir(PREFIX)), "latest.pdf"))

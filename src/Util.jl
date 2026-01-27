@@ -33,7 +33,9 @@ function prepare_freq(Δ, d; params::SystemParams)
     kc = let
         ωc/params.c
     end
+    @show kc
     kc = findclosest(d/2, kc, π)
+    @show kc
     kc * params.c
 end
 
