@@ -63,13 +63,13 @@ end
 
 let
     p = joinpath(datadir("P1") |> mkpath, "latest.jld2")
-    M = (ω = ω, z = z)
+    M = (Δ = ω, z = z)
     @save p M
 end
 
 p = plot(; xlabel = "Δ/ 2π kHz", ylabel = "z/μm", yscale = :log)
 
-scatter!(p, ω, z[1, :])
+scatter!(p, ω./ 2π ./1e3, z[1, :]./1e6)
 savefig(p, joinpath(mkpath(plotsdir("n1")), "latest.pdf"))
 savefig(p, joinpath(mkpath(plotsdir("n1")), "$(now_nodots()).png"))
 
