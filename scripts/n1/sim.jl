@@ -69,7 +69,7 @@ end
 
 p = plot(; xlabel = "Δ/ 2π kHz", ylabel = "z/μm", yscale = :log)
 
-scatter!(p, ω./ 2π ./1e3, z[1, :]./1e6)
+scatter!(p, ω./ 2π ./1e3, z[1, :].*1e6)
 savefig(p, joinpath(mkpath(plotsdir("n1")), "latest.pdf"))
 savefig(p, joinpath(mkpath(plotsdir("n1")), "$(now_nodots()).png"))
 
