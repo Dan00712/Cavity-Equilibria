@@ -42,7 +42,7 @@ const vϕ = [0]
     for Δ in ProgressBar(Ω)
         for zg in vz
             try
-                r = find_roots(collect(zg), vd, vϕ; Δ = Δ, κ = κ, params = params)
+                r = find_roots_log(collect(zg), vd, vϕ; Δ = Δ, κ = κ, params = params)
 
                 if (length(z) == 0 || !any(v -> isapprox(v, r), z)) && all(abs.(r) .< 1e3)
                     push!(z, r)

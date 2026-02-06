@@ -5,7 +5,7 @@ using NLsolve
 using ..Parameters
 using ..Laser
 
-export vL, find_roots, find_roots_log10, ConvergenceError
+export vL, find_roots, find_roots_log, ConvergenceError
 
 function δc(vz, vd; Δ, params::SystemParams)
     ħ = params.ħ
@@ -69,7 +69,6 @@ Base.showerror(io::IO, e::ConvergenceError) = print(io, "ConvergenceError: ", e.
 """
     find_roots(zguess, vd, vϕ; Δ, κ, params)
 
-Find roots of the optical force equation using nonlinear solving.
 
 # Arguments
 - `zguess::AbstractVector`: Initial guess for z positions (in meters; with default params)
@@ -106,6 +105,48 @@ function find_roots(zguess, vd, vϕ; Δ, κ, params::SystemParams, scale = 1e6)
         throw(ConvergenceError(":trust_region failed to converge on a root", root))
     end
     root.zero ./ scale
+end
+
+"""
+    find_roots_log(zguess, vd, vϕ; Δ, κ, params)
+
+    uses logarithmic scaling on vL
+
+# Arguments
+- `zguess::AbstractVector`: Initial guess for z positions (in meters; with default params)
+- `vd::AbstractVector`: spacing of the tweezers
+- `vϕ::AbstractVector`: phase of the tweezers in reference to a global phase
+- `Δ`: Detuning angular frequency 
+- `κ`: damping parameter
+- `params::SystemParams`: parameters of the system
+- `scale`: scaling factor for root finding (zguess gets scaled by scale and the root finding function by 1/scale)
+
+# Returns
+- `Vector{Float64}`: Root positions in meters
+
+# Throws
+- `ConvergenceError`: If the nonlinear solver fails to converge
+
+# Examples
+```julia
+zguess = [1e-6, 2e-6, 3e-6]
+vd = [0.0, 0.1, 0.2]
+vϕ = [0.0, π/4, π/2]
+roots = find_roots(zguess, vd, vϕ; Δ=1e6, κ=0.5, params=DEFAULT_PARAMETER)
+```
+"""
+function find_roots_log(zguess, vd, vϕ; Δ, κ, params::SystemParams, scale = 1e6)
+    @assert zguess isa AbstractVector
+    @assert length(zguess) == length(vd)
+    @assert length(zguess) == length(vϕ)
+
+    vL! = (F, zg)->F .= vL(exp10.(zg) ./ scale, vd, vϕ; Δ = Δ, κ = κ, params = params)
+    root = nlsolve(vL!, log10.(zguess .* scale); method = :trust_region, ftol = 1e-16, xtol = 1e-16)
+
+    if !converged(root)
+        throw(ConvergenceError(":trust_region failed to converge on a root", root))
+    end
+    exp10.(root.zero) ./ scale
 end
 
 

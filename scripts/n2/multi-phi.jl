@@ -52,7 +52,7 @@ for ϕ in Φ
         vd = [-l/2, l/2]
         for zg in Iterators.product([zsp(Δ) for _ in 1:N]...)
             try
-                r = find_roots(
+                r = find_roots_log(
                     collect(zg), vd, vϕ;
                     Δ = Δ, κ = κ, params = params
                 )
