@@ -21,6 +21,7 @@ using CavityEquilibria.RootFinding
 using CavityEquilibria.Util
 
 
+const PREFIX = "n2"
 const params = DEFAULT_PARAMS
 const N = 2
 const κ = 18e4*2π
@@ -33,12 +34,16 @@ end
 
 Δs = unique(M.Δ)
 function zsp(Δ)
-	M.z[M.Δ .== Δ]
+	#M.z[M.Δ .== Δ]
+    exp10.(range(-2, 1, length=5)) |> collect
 end
 
 z = []
 ω = []
 φ = []
+
+convergence_failed = 0
+outofbounds = 0
 	
 for Δ in ProgressBar(Δs)
 	l = params.λ0 * (1- Δ/params.ω0)
@@ -55,16 +60,32 @@ for Δ in ProgressBar(Δs)
 				push!(z, r)
 				push!(ω, Δ)
                 push!(φ, ϕ)
+            elseif any(abs.(r) .> 1)
+                global outofbounds
+                outofbounds += 1
 			end
 		catch err
 			if !(err isa ConvergenceError)
 				rethrow(err)
 			end
+            global convergence_failed
+            convergence_failed += 1
+            @error "convergence error with"
 		end
 	end
 end
+@info "got $(outofbounds) solutions that were out of bounds"
+@info "got $(convergence_failed) solutions that did not converge"
 
+@show z
 z = Iterators.reduce(hcat, z)
+
+M = (Δ=ω, z=z, ϕ=φ)
+let
+    p = mkpath(datadir(PREFIX))
+    @save joinpath(p, "latest.jld2") M
+    @save joinpath(p, "$(now_nodots()).jld2") M
+end
 
 p = plot(;
   xaxis=:log,
