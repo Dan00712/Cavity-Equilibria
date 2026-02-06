@@ -36,17 +36,22 @@ end
 
 Δs = unique(M.Δ)
 function zsp(Δ)
-	M.z[M.Δ .== Δ]
+    M.z #[Δ .== M.Δ]
 end
 
 z = []
 ω = []
 φ = []
+lc = ReentrantLock()
 
 @info "running Φ values"
 for ϕ in Φ
     @info "ϕ = $(round(ϕ, digits=2))"
-    for Δ in ProgressBar(Δs)
+    Threads.@threads for Δ in ProgressBar(Δs)
+        z_ = []
+        ω_ = []
+        φ_ = []
+
         l = params.λ0 * (1- Δ/params.ω0)
         vϕ = [0, ϕ]
         vd = [-l/2, l/2]
@@ -57,15 +62,20 @@ for ϕ in Φ
                     Δ = Δ, κ = κ, params = params
                 )
 
-                if (length(z) == 0 || !any(v-> isapprox(v, r), z) && all(abs.(r) .< 1))
-                    push!(z, r)
-                    push!(ω, Δ)
-                    push!(φ, ϕ)
+                if (length(z) == 0 || !any(v-> isapprox(v, r), z_) && all(abs.(r) .< 1))
+                    push!(z_, r)
+                    push!(ω_, Δ)
+                    push!(φ_, ϕ)
                 end
             catch err
                 if !(err isa ConvergenceError)
                     rethrow(err)
                 end
+            end
+            lock(lc) do
+                append!(z, z_)
+                append!(ω, ω_)
+                append!(φ, φ_)
             end
         end
     end
