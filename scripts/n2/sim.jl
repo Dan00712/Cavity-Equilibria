@@ -74,7 +74,6 @@ function main()
     				rethrow(err)
     			end
                 convergence_failed[] += 1
-    #            @error "convergence error with"
     		end
     	end
         lock(lc) do
@@ -83,11 +82,16 @@ function main()
             append!(φ, φ_)
         end
     end
+
     @info "got $(outofbounds) solutions that were out of bounds"
     @info "got $(convergence_failed) solutions that did not converge"
     
     @show z
     z = Iterators.reduce(hcat, z)
+    z = Float64.(z)
+
+    ω = Float64.(ω)
+    φ = Float64.(φ)
     
     M = (Δ=ω, z=z, ϕ=φ)
     let

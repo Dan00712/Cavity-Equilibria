@@ -83,6 +83,10 @@ end
 
 @info "reformatting data"
 z = Iterators.reduce(hcat, z)
+z = Float64.(z)
+
+ω = Float64.(ω)
+φ = Float64.(φ)
 
 @info "storing data"
 M = (Δ=ω, z=z, ϕ=φ)
