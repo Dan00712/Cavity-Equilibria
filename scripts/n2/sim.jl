@@ -62,7 +62,7 @@ function main()
     				Δ = Δ, κ = κ, params = params
     			)
     		
-    			if (length(z_) == 0 || !any(v-> isapprox(v, r), z_) && all(abs.(r) .< 1))
+                if ((length(z_) == 0 || !any(v-> isapprox(v, r), z_)) && all(abs.(r) .< 1))
     				push!(z_, r)
     				push!(ω_, Δ)
                     push!(φ_, ϕ)
