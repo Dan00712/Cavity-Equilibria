@@ -19,7 +19,7 @@ using CavityEquilibria.RootFinding
 using CavityEquilibria.Util
 
 const params = DEFAULT_PARAMS
-const Ω = range(1, 400, length = 100) .* 1e3*2π;
+const Ω = range(1, 1000, length = 150) .* 1e3*2π;
 
 const N = 1
 const sz = let
