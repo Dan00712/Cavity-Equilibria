@@ -30,9 +30,10 @@ M = let
     M
 end
 
+z_sp = (copy(M.z))
 Δs = unique(M.Δ)
 function zsp(Δ)
-    M.z
+    z_sp
 end
 
 
@@ -114,6 +115,7 @@ function main()
     )
     
     if isinteractive()
+        savefig(p, joinpath(mkpath(plotsdir(PREFIX)), "latest.html"))
         gui(p)
     end
     p, M
