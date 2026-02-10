@@ -20,11 +20,17 @@ const N = 2
 const φ = 0
 
 ω, ϕ, z = let
-	@load datadir(PREFIX, "latest.jld2") M
+    path = if length(ARGS) >= 2
+        ARGS[1]
+    else 
+        datadir(PREFIX, "latest.jld2")
+    end
+
+	@load path M
 
     selector = M.z[1,:] .> 0 .&& M.z[2, :] .> 0
     M.Δ[selector], M.ϕ[selector], M.z[:, selector]
-    #M.Δ, M.ϕ, M.z
+    M.Δ, M.ϕ, M.z
 end
 
 itp = interpolate(Polyharmonic(2), z, ω)
@@ -33,10 +39,10 @@ z2_ = (range((extrema(z[2, :]))..., 200))
 Ds = [evaluate(itp, [z1i, z2i])[1] for z1i in z1_, z2i in z2_]
 
 p = plot(;
-    xaxis=:log,
+    #xaxis=:log,
 #    xlims=(10^-2, 50),
     xlabel="z1/μm",
-    yaxis=:log,
+    #yaxis=:log,
 #    ylims=(10^-2, 50),
     ylabel="z2/μm",
     zlabel="Δ/ 2πkHz"
@@ -51,8 +57,13 @@ scatter!(p,
       )
       =#
 
+savename = if length(ARGS) >= 2
+    ARGS[2]
+else
+    "latest"
+end
   
-savefig(p, joinpath(mkpath(plotsdir(PREFIX)), "latest.html"))
+savefig(p, joinpath(mkpath(plotsdir(PREFIX)), "$(savename).html"))
 savefig(p, joinpath(mkpath(plotsdir(PREFIX)), "$(now_nodots()).html"))
 
 if isinteractive()
