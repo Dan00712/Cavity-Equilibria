@@ -87,7 +87,6 @@ function main()
     @info "got $(outofbounds) solutions that were out of bounds"
     @info "got $(convergence_failed) solutions that did not converge"
     
-    @show z
     z = Iterators.reduce(hcat, z)
     z = Float64.(z)
 

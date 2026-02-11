@@ -5,7 +5,7 @@ using NLsolve
 using ..Parameters
 using ..Laser
 
-export vL, find_roots, find_roots_log, ConvergenceError
+export vL, find_roots, find_roots_log, ConvergenceError, dηodt, α_c_eq
 
 function δc(vz, vd; Δ, params::SystemParams)
     ħ = params.ħ
@@ -149,5 +149,23 @@ function find_roots_log(zguess, vd, vϕ; Δ, κ, params::SystemParams, scale = 1
     exp10.(root.zero) ./ scale
 end
 
+function dηodt(η; Δ, κ, params::SystemParams)
+    # η = [z1, z2, p1, p2, α]
+    ħ = params.ħ
+    α = params.α
+    l = params.λ0 * (1- Δ/params.ω0)
+    vd = [-l/2, l/2]
+    vϕ =  [0,0]
+
+    dαcodt = (-im * δc(η[1:2], vd; Δ=Δ, params=params) + κ +
+        im/ħ * sum(
+        Ec(0, yi, zi; Δ = Δ, params = params)*Et(0, 0, zi; params = params)*exp(im*ϕi) for
+        (yi, zi, ϕi) in zip(vd, η[1:2], vϕ)) * η[end]
+    )
+    dpodt =  α * vL(η[1:2], vd, vϕ; Δ=Δ, κ=κ, params=params) .* η[1:2]
+    dzodt = 1/params.m .* η[3:4]
+
+    dη = [dzodt..., dpodt..., dαcodt]
+end
 
 end # module RootFinding
