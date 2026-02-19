@@ -50,7 +50,7 @@ function main()
         Δ = Δs[i]
     	l = params.λ0 * (1- Δ/params.ω0)
     	vϕ = [0, ϕ]
-    	vd = [-l/2, l/2]
+    	vd = [-l, l]
 
         z_ = []
         ω_ = []
@@ -87,7 +87,7 @@ function main()
     @info "got $(outofbounds) solutions that were out of bounds"
     @info "got $(convergence_failed) solutions that did not converge"
     
-    @show z
+   # @show z
     z = Iterators.reduce(hcat, z)
     z = Float64.(z)
 
