@@ -4,6 +4,7 @@ DrWatson.quickactivate(
 )
 
 using Logging
+using LinearAlgebra
 
 using JLD2
 using Plots
@@ -43,7 +44,7 @@ colors = [
         [-l, l]
     end
     params=DEFAULT_PARAMS
-    f(z1, z2, Δ) = vL([z1, z2], vd(Δ, params=params), [0, φ], Δ=Δ, κ=18e4*2π, params=params)
+    f(z1, z2, Δ) = norm(vL([z1, z2], vd(Δ, params=params), [0, φ], Δ=Δ, κ=18e4*2π, params=params))
 
     vs = [f(z1i, z2i, Δi) for (z1i, z2i, Δi) in zip(M.z[1,:], M.z[2,:], M.Δ)]
     sel = vs .== 0
