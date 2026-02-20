@@ -23,7 +23,7 @@ const PREFIX = "n2"
 const params = DEFAULT_PARAMS
 const N = 2
 const κ = 18e4*2π
-const ϕ = 0 
+const ϕ = π/10
 
 M = let
 	@load datadir("P1", "latest.jld2") M
