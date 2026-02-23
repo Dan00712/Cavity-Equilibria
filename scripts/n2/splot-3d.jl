@@ -20,7 +20,7 @@ const N = 2
 const φ = 0
 
 ω, ϕ, z = let
-    path = if length(ARGS) >= 2
+    path = if length(ARGS) >= 1
         ARGS[1]
     else 
         datadir(PREFIX, "latest.jld2")
