@@ -26,6 +26,18 @@ const N = 2
 const κ = 18e4*2π
 const ϕ = 0 
 
+vd(Δ; params) = begin
+   l = 2*params.λ0 * (1-Δ/params.ω0)
+   [-l, l]
+end
+vp = [0, ϕ]
+
+f(z1, z2, Δ) = norm(vL(
+                           [z1, z2], 
+                           vd(Δ; params=params),
+                           vp;
+                           Δ=Δ, κ=κ, params=params
+              ))
 
 function local_minima(A)
     results = []
@@ -46,23 +58,20 @@ end
 z1, z2, Δs = let
     @load datadir("P1", "latest.jld2") M
 
-    z1 = range(25e-6, 30e-6, 500)
+    z1 = range(23e-6, 25e-6, 500)
     z2 = copy(z1)
     Δ = range(extrema(M.Δ)..., 100)
 
-    vd(Δ; params) = begin
-        l = 2*params.λ0 * (1-Δ/params.ω0)
-        [-l, l]
+    #fs = f.(z1, z2', reshape(Δ, 1, 1, :))
+    n1, n2, nΔ = size(z1, 1), size(z2, 1), length(Δ)
+    fs = similar(z1, Float64, n1, n2, nΔ)
+    Threads.@threads for i in ProgressBar(1:n1)
+        for j in 1:n2
+            for k in 1:nΔ
+                fs[i,j,k] = f(z1[i], z2[j], Δ[k])
+            end
+        end
     end
-    vp = [0, ϕ]
-
-    f(z1, z2, Δ) = norm(vL(
-                           [z1, z2], 
-                           vd(Δ; params=params),
-                           vp;
-                           Δ=Δ, κ=κ, params=params
-              ))
-    fs = f.(z1, z2', reshape(Δ, 1, 1, :))
     minimas = local_minima(fs)
     z = []
     ω = Float64[]
@@ -86,7 +95,7 @@ function main()
     convergence_failed = Threads.Atomic{Int}(0)
     outofbounds = Threads.Atomic{Int}(0)
 
-    for (z1i, z2i, Δ) in ProgressBar(zip(z1, z2, Δs))
+    Threads.@threads for (z1i, z2i, Δ) in ProgressBar(collect(zip(z1, z2, Δs)))
         zg = [z1i, z2i]
     	l = params.λ0 * (1- Δ/params.ω0)
     	vϕ = [0, ϕ]
@@ -124,14 +133,21 @@ function main()
         end
     end
 
-    @info "got $(outofbounds) solutions that were out of bounds"
-    @info "got $(convergence_failed) solutions that did not converge"
+    @info "got $(outofbounds[]) solutions that were out of bounds"
+    @info "got $(convergence_failed[]) solutions that did not converge"
     
     z = Iterators.reduce(hcat, z)
     z = Float64.(z)
 
     ω = Float64.(ω)
     φ = Float64.(φ)
+
+    z, ω, φ, sel = let
+        fs = f.(z[1, :], z[2, :], ω)
+        sel = fs .== 0
+        @info "got $(length(sel)-sum(sel)) (1-$(sum(sel))/$(length(sel))=$(1-sum(sel)/length(sel))%) misses"
+        z[:, sel], ω[sel], φ[sel], sel
+    end
     
     M = (Δ=ω, z=z, ϕ=φ)
     let
@@ -141,10 +157,10 @@ function main()
     end
     
     p = plot(;
-      xaxis=:log,
+      #xaxis=:log,
  #     xlims=(10^-2, 50),
       xlabel="z1/μm",
-      yaxis=:log,
+      #yaxis=:log,
 #      ylims=(10^-2, 50),
       ylabel="z2/μm",
       zlabel="Δ/ 2πkHz"
@@ -160,4 +176,4 @@ function main()
     p, M
 end
 
-f = main()
+foo = main()
