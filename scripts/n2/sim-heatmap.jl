@@ -27,12 +27,12 @@ const ϕ = 0
 const params = DEFAULT_PARAMS
 
 const z1 = let
-    μ = 5.156e-6
+    μ = 27.665e-6
     extending = 5e-6
     range(μ-extending, μ+extending, 1000)
 end
 const z2 = let
-    μ = -5.533e-6
+    μ = 29.188e-6
     extending = 5e-6
     range(μ-extending, μ+extending, 1000)
 end
